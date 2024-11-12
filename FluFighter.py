@@ -1,6 +1,16 @@
+import subprocess
+import sys
+
+# Ensure matplotlib is installed
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    print("Matplotlib not found. Installing...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "matplotlib"])
+    import matplotlib.pyplot as plt  # Re-import after installation
+
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
 
 # Function to simulate infection dynamics
 def simulate_infection_graph(population_size, initial_infected, R0, recovery_rate, isolation_rate, days, vaccination_rate, vaccine_efficacy):
