@@ -61,7 +61,7 @@ with st.form("Add new simulation"):
     isolation_rate = st.slider("Isolation Rate", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
     days = st.slider("Days", min_value=1, max_value=50, value=20, step=1)
     vaccination_rate = st.slider("Vaccination Rate", min_value=0.0, max_value=1.0, value=0.7, step=0.01)
-    vaccine_efficacy = st.slider("Vaccine Efficacy", min_value=0.5, max_value=1.0, value=0.9, step=0.01)
+    vaccine_efficacy = st.slider("Vaccine Efficacy", min_value=0.1, max_value=1.0, value=0.9, step=0.01)
     
     # Submit button
     if st.form_submit_button("Add Simulation"):
