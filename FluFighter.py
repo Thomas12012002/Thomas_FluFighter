@@ -91,41 +91,54 @@ def simulate_infection_with_individuals(population_size, initial_infected, R0, r
     return (total_susceptible, total_infected, total_recovered, population_history)
 
 # Streamlit UI
-st.title("Interactive Infection Simulation")
-st.write("Simulate infection dynamics with customizable parameters. Click 'Add Simulation' to add new scenarios, each will appear with a static curve and an animated dots simulation.")
+st.set_page_config(page_title="FluFighter Simulation", layout="wide")
+st.title("🦠 FluFighter: Interactive Infection Simulation")
 
-# Parameters for the simulation
-if 'simulations' not in st.session_state:
-    st.session_state.simulations = []
+st.markdown("""
+Welcome to **FluFighter**! Adjust the parameters using the controls on the left to simulate infection dynamics. The main screen displays both aggregate curves and an animated dots simulation to visualize the spread and recovery over time.
+""")
 
-# Form to add a new simulation
-with st.form("Add new simulation"):
+# Sidebar for parameters
+st.sidebar.header("Simulation Parameters")
+
+# Group parameters into categories for better organization
+with st.sidebar.expander("🔬 **Basic Parameters**", expanded=True):
     population_size = st.number_input("Population Size", min_value=50, max_value=1000, value=200, step=10)
     initial_infected = st.number_input("Initial Infected", min_value=1, max_value=100, value=10, step=1)
+    days = st.number_input("Simulation Days", min_value=1, max_value=365, value=30, step=1)
+
+with st.sidebar.expander("⚕️ **Disease Parameters**", expanded=True):
     R0 = st.slider("R0 (Infection Rate)", min_value=0.5, max_value=5.0, value=2.0, step=0.1)
     recovery_rate = st.slider("Recovery Rate", min_value=0.01, max_value=1.0, value=0.1, step=0.01)
     isolation_rate = st.slider("Isolation Rate", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
-    days = st.slider("Days", min_value=1, max_value=100, value=30, step=1)
+
+with st.sidebar.expander("💉 **Vaccination Parameters**", expanded=True):
     vaccination_rate = st.slider("Vaccination Rate", min_value=0.0, max_value=1.0, value=0.7, step=0.01)
     vaccine_efficacy = st.slider("Vaccine Efficacy", min_value=0.1, max_value=1.0, value=0.9, step=0.01)
-    
-    # Submit button
-    if st.form_submit_button("Add Simulation"):
-        simulation_parameters = {
-            "population_size": population_size,
-            "initial_infected": initial_infected,
-            "R0": R0,
-            "recovery_rate": recovery_rate,
-            "isolation_rate": isolation_rate,
-            "days": days,
-            "vaccination_rate": vaccination_rate,
-            "vaccine_efficacy": vaccine_efficacy,
-        }
-        st.session_state.simulations.append(simulation_parameters)
 
-# Display each simulation with curve and animated dots
+# Button to run simulation
+run_simulation = st.sidebar.button("Run Simulation 🚀")
+
+# Initialize session state for simulations
+if 'simulations' not in st.session_state:
+    st.session_state.simulations = []
+
+if run_simulation:
+    simulation_parameters = {
+        "population_size": population_size,
+        "initial_infected": initial_infected,
+        "R0": R0,
+        "recovery_rate": recovery_rate,
+        "isolation_rate": isolation_rate,
+        "days": days,
+        "vaccination_rate": vaccination_rate,
+        "vaccine_efficacy": vaccine_efficacy,
+    }
+    st.session_state.simulations.append(simulation_parameters)
+
+# Display simulations
 for idx, params in enumerate(st.session_state.simulations):
-    st.subheader(f"Simulation {idx + 1}")
+    st.subheader(f"📊 Simulation {idx + 1}")
 
     # Run simulation
     susceptible, infected, recovered, population_history = simulate_infection_with_individuals(
@@ -134,17 +147,17 @@ for idx, params in enumerate(st.session_state.simulations):
         params["vaccination_rate"], params["vaccine_efficacy"]
     )
 
-    # Create columns with 60% and 40% width ratios
-    curve_col, dots_col = st.columns([3, 2])  # 3 parts for 60%, 2 parts for 40%
+    # Create columns for side-by-side layout
+    curve_col, dots_col = st.columns([1, 1.5])  # Adjust column ratios as needed
 
-    # Plot the static curve in the right column (60% width)
+    # Plot the static curve in the right column
     with curve_col:
-        fig_curve, ax_curve = plt.subplots(figsize=(6, 4))  # Adjusted figure size for better visibility
+        fig_curve, ax_curve = plt.subplots(figsize=(5, 4))
         ax_curve.plot(range(params["days"] + 1), susceptible, label='Susceptible', color='orange')
         ax_curve.plot(range(params["days"] + 1), infected, label='Infected', color='red')
         ax_curve.plot(range(params["days"] + 1), recovered, label='Recovered', color='green')
         
-        ax_curve.set_title(f'Population Dynamics')
+        ax_curve.set_title('Population Dynamics Over Time')
         ax_curve.set_xlabel('Days')
         ax_curve.set_ylabel('Number of Individuals')
         ax_curve.legend()
@@ -152,12 +165,13 @@ for idx, params in enumerate(st.session_state.simulations):
         
         st.pyplot(fig_curve)
 
-    # Create the animated dots plot in the left column (40% width)
+    # Create the animated dots plot in the left column
     with dots_col:
         # Prepare data for Plotly animation
         frames = []
         for day, population_snapshot in enumerate(population_history):
-            x = [p['position'][0] + np.random.uniform(-0.05, 0.05) for p in population_snapshot]  # Add slight movement
+            # Slightly adjust positions for visualization
+            x = [p['position'][0] + np.random.uniform(-0.05, 0.05) for p in population_snapshot]
             y = [p['position'][1] + np.random.uniform(-0.05, 0.05) for p in population_snapshot]
             colors = []
             for p in population_snapshot:
@@ -190,28 +204,27 @@ for idx, params in enumerate(st.session_state.simulations):
                 marker=dict(color=colors_init, size=8, opacity=0.7)
             )],
             layout=go.Layout(
-                title='Infection Spread Simulation',
+                title='🟢 Infection Spread Simulation',
                 xaxis=dict(range=[0, 1], showgrid=False, zeroline=False, visible=False),
                 yaxis=dict(range=[0, 1], showgrid=False, zeroline=False, visible=False),
                 updatemenus=[dict(
                     type="buttons",
-                    buttons=[dict(label="Play",
+                    buttons=[dict(label="▶️ Play",
                                   method="animate",
-                                  args=[None, {"frame": {"duration": 500, "redraw": True},
+                                  args=[None, {"frame": {"duration": 300, "redraw": True},
                                                "fromcurrent": True, "transition": {"duration": 0}}])]
-                )],
-                # Ensure consistent size for alignment
-                autosize=False,
-                width=400,  # Adjust width as needed
-                height=300  # Adjust height as needed
+                )]
             ),
             frames=frames
         )
 
-        # Optional: Synchronize the animation speed with the curve plot
-        # This ensures that each frame corresponds to a day
+        # Adjust layout for better visualization
         fig_dots.update_layout(
-            xaxis=dict(scaleanchor="y", scaleratio=1),  # Maintain aspect ratio
+            width=600,
+            height=500,
+            margin=dict(l=0, r=0, t=40, b=0)
         )
 
         st.plotly_chart(fig_dots, use_container_width=True)
+
+    st.markdown("---")  # Separator between simulations
