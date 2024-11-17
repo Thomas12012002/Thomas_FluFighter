@@ -1,15 +1,3 @@
-import subprocess
-import sys
-
-# Ensure necessary packages are installed
-required_packages = ['matplotlib', 'streamlit', 'numpy', 'plotly']
-for package in required_packages:
-    try:
-        __import__(package)
-    except ImportError:
-        print(f"{package} not found. Installing...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-
 import matplotlib.pyplot as plt
 import streamlit as st
 import numpy as np
@@ -146,12 +134,12 @@ for idx, params in enumerate(st.session_state.simulations):
         params["vaccination_rate"], params["vaccine_efficacy"]
     )
 
-    # Create columns for side-by-side layout
-    curve_col, dots_col = st.columns(2)
+    # Create columns with 60% and 40% width ratios
+    curve_col, dots_col = st.columns([3, 2])  # 3 parts for 60%, 2 parts for 40%
 
-    # Plot the static curve in the right column
+    # Plot the static curve in the right column (60% width)
     with curve_col:
-        fig_curve, ax_curve = plt.subplots(figsize=(5, 4))
+        fig_curve, ax_curve = plt.subplots(figsize=(6, 4))  # Adjusted figure size for better visibility
         ax_curve.plot(range(params["days"] + 1), susceptible, label='Susceptible', color='orange')
         ax_curve.plot(range(params["days"] + 1), infected, label='Infected', color='red')
         ax_curve.plot(range(params["days"] + 1), recovered, label='Recovered', color='green')
@@ -164,7 +152,7 @@ for idx, params in enumerate(st.session_state.simulations):
         
         st.pyplot(fig_curve)
 
-    # Create the animated dots plot in the left column
+    # Create the animated dots plot in the left column (40% width)
     with dots_col:
         # Prepare data for Plotly animation
         frames = []
@@ -211,9 +199,19 @@ for idx, params in enumerate(st.session_state.simulations):
                                   method="animate",
                                   args=[None, {"frame": {"duration": 500, "redraw": True},
                                                "fromcurrent": True, "transition": {"duration": 0}}])]
-                )]
+                )],
+                # Ensure consistent size for alignment
+                autosize=False,
+                width=400,  # Adjust width as needed
+                height=300  # Adjust height as needed
             ),
             frames=frames
+        )
+
+        # Optional: Synchronize the animation speed with the curve plot
+        # This ensures that each frame corresponds to a day
+        fig_dots.update_layout(
+            xaxis=dict(scaleanchor="y", scaleratio=1),  # Maintain aspect ratio
         )
 
         st.plotly_chart(fig_dots, use_container_width=True)
